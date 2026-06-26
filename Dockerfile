@@ -1,15 +1,14 @@
-FROM python:3.11-slim
+FROM public.ecr.aws/lambda/python:3.11
 
-WORKDIR /app
+# Install the C++ compilers needed for Machine Learning libraries
+RUN yum update -y && yum install -y gcc gcc-c++ make
 
-COPY requirements.txt .
-
+# Copy requirements and install them
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY api/ /app/api/
+# Copy all your Python code into the Lambda root
+COPY . ${LAMBDA_TASK_ROOT}
 
-ENV PORT=8000
-
-EXPOSE 8000
-
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Point Lambda to the Mangum handler in main.py
+CMD [ "main.handler" ]
